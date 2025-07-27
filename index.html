@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel do Administrador - Anderson Multimarcas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    header { background: #333; color: white; padding: 20px; text-align: center; }
+    main { padding: 20px; }
+    form { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    input, select, textarea, button { display: block; width: 100%; margin-bottom: 10px; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+    button { background-color: #25D366; color: white; border: none; cursor: pointer; }
+    h2 { margin-top: 0; }
+    .veiculo, .galeria { background: white; margin-bottom: 15px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .veiculo img, .galeria img { max-width: 100px; margin-right: 10px; }
+    .whatsapp-button { position: fixed; bottom: 20px; right: 20px; background-color: #25D366; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 30px; text-decoration: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); }
+    #login-screen { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
+    #logout-btn { background-color: #dc3545; }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div id="login-screen" style="display: none;">
+    <h2>Login do Administrador</h2>
+    <input type="password" id="senha" placeholder="Digite a senha">
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
+
+  <div id="painel" style="display: none;">
+    <header>
+      <h1>Painel Administrativo</h1>
+      <button id="logout-btn" onclick="logout()">Sair</button>
+    </header>
+
+    <main>
+      <h2>Adicionar Novo Veículo</h2>
+      <form id="form-veiculo">
+        <input type="text" id="marca" placeholder="Marca" required>
+        <input type="text" id="modelo" placeholder="Modelo" required>
+        <input type="number" id="ano" placeholder="Ano" required>
+        <input type="text" id="preco" placeholder="Preço" required>
+        <textarea id="descricao" placeholder="Descrição do veículo"></textarea>
+        <input type="file" id="imagens" multiple accept="image/*">
+        <button type="submit">Salvar Veículo</button>
+      </form>
+
+      <h2>Estoque Atual</h2>
+      <div id="lista-veiculos"></div>
+
+      <h2>Contatos e Localizações</h2>
+      <form>
+        <input type="email" placeholder="Email para contato">
+        <textarea placeholder="Endereços das lojas (uma por linha)"></textarea>
+        <button type="button">Salvar Contato e Localizações</button>
+      </form>
+
+      <h2>Galeria de Serviços</h2>
+      <form id="form-servicos">
+        <input type="text" id="titulo-servico" placeholder="Título do serviço (Ex: Seguro de Veículos, Consórcio, Consignado do INSS)" required>
+        <textarea id="descricao-servico" placeholder="Descrição do serviço" required></textarea>
+        <input type="file" id="imagens-servico" multiple accept="image/*">
+        <button type="submit">Adicionar Serviço</button>
+      </form>
+      <div id="galeria-servicos"></div>
+    </main>
+  </div>
+
+  <a class="whatsapp-button" href="https://wa.me/5599999999999" target="_blank" title="Fale conosco pelo WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  <script>
+    const senhaCorreta = "admin123";
+    function verificarLogin() {
+      if (localStorage.getItem("logado") === "true") {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("painel").style.display = "block";
+        renderizarVeiculos();
+      } else {
+        document.getElementById("login-screen").style.display = "block";
+      }
+    }
+    function fazerLogin() {
+      const senha = document.getElementById("senha").value;
+      if (senha === senhaCorreta) {
+        localStorage.setItem("logado", "true");
+        verificarLogin();
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+    function logout() {
+      localStorage.removeItem("logado");
+      location.reload();
+    }
+    const form = document.getElementById('form-veiculo');
+    const lista = document.getElementById('lista-veiculos');
+    const formServicos = document.getElementById('form-servicos');
+    const galeria = document.getElementById('galeria-servicos');
+    function salvarVeiculoLocal(veiculo) {
+      const veiculos = JSON.parse(localStorage.getItem('veiculos') || '[]');
+      veiculos.push(veiculo);
+      localStorage.setItem('veiculos', JSON.stringify(veiculos));
+    }
+    function renderizarVeiculos() {
+      if (!lista) return;
+      lista.innerHTML = '';
+      const veiculos = JSON.parse(localStorage.getItem('veiculos') || '[]');
+      veiculos.forEach((v) => {
+        const div = document.createElement('div');
+        div.className = 'veiculo';
+        div.innerHTML = `<strong>${v.marca} ${v.modelo} - ${v.ano}</strong><br>Preço: ${v.preco}<br><em>${v.descricao}</em><br>${v.imagens.map(img => `<img src="${img}" alt="Imagem do veículo">`).join('')}`;
+        lista.appendChild(div);
+      });
+    }
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const marca = document.getElementById('marca').value;
+        const modelo = document.getElementById('modelo').value;
+        const ano = document.getElementById('ano').value;
+        const preco = document.getElementById('preco').value;
+        const descricao = document.getElementById('descricao').value;
+        const imagensInput = document.getElementById('imagens');
+        const readerPromises = Array.from(imagensInput.files).map(file => {
+          return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        });
+        Promise.all(readerPromises).then(imagensBase64 => {
+          const veiculo = { marca, modelo, ano, preco, descricao, imagens: imagensBase64 };
+          salvarVeiculoLocal(veiculo);
+          renderizarVeiculos();
+          form.reset();
+        });
+      });
+    }
+    if (formServicos) {
+      formServicos.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const titulo = document.getElementById('titulo-servico').value;
+        const descricao = document.getElementById('descricao-servico').value;
+        const imagensInput = document.getElementById('imagens-servico');
+        const readerPromises = Array.from(imagensInput.files).map(file => {
+          return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        });
+        Promise.all(readerPromises).then(imagensBase64 => {
+          const div = document.createElement('div');
+          div.className = 'galeria';
+          div.innerHTML = `<h4>${titulo}</h4><p>${descricao}</p>${imagensBase64.map(img => `<img src="${img}" alt="Imagem do serviço">`).join('')}`;
+          galeria.appendChild(div);
+          formServicos.reset();
+        });
+      });
+    }
+    verificarLogin();
+  </script>
+</body>
+</html>
